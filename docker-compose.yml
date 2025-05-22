@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  db:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: postgresql-dev
+    restart: always
+    environment:
+      POSTGRES_USER: usuario
+      POSTGRES_PASSWORD: contraseña_segura
+      POSTGRES_DB: basededatos
+    ports:
+      - "5432:5432"

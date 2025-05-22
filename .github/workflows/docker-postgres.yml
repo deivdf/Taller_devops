@@ -1,0 +1,31 @@
+name: Build and Run PostgreSQL Docker
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH into EC2 and deploy container
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker stop postgresql-dev || true
+            docker rm postgresql-dev || true
+            docker run \
+              --name postgresql-dev \
+              -e POSTGRES_USER=admin \
+              -e POSTGRES_PASSWORD=admin123 \
+              -e POSTGRES_DB=mydb \
+              -p 5432:5432 \
+              -v /home/ec2-user/init.sql:/docker-entrypoint-initdb.d/init.sql \
+              postgres:16
