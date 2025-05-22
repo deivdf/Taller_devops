@@ -26,5 +26,5 @@ jobs:
               -e POSTGRES_PASSWORD=admin123 \
               -e POSTGRES_DB=mydb \
               -p 5432:5432 \
-              -v /home/ec2-user/init.sql:/docker-entrypoint-initdb.d/init.sql \
-              postgres:16
+              -v $GITHUB_WORKSPACE/init.sql:/docker-entrypoint-initdb.d/init.sql
+              -d postgres:16
