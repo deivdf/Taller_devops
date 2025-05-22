@@ -1,0 +1,33 @@
+name: Cargar datos SQL en PostgreSQL EC2
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  load-sql:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Crear archivo de clave privada
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > ec2_key.pem
+          chmod 600 ec2_key.pem
+
+      - name: Copiar archivos .sql a EC2
+        run: |
+          scp -i ec2_key.pem -o StrictHostKeyChecking=no *.sql ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/
+
+      - name: Ejecutar archivos .sql en contenedor PostgreSQL
+        run: |
+          ssh -i ec2_key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            for file in *.sql; do
+              echo "Ejecutando $file..."
+              docker exec -i postgresql-dev psql -U ${{ secrets.POSTGRES_USER }} -d ${{ secrets.POSTGRES_DB }} < "/home/${{ secrets.EC2_USER}}/$file"
+            done
+          EOF
